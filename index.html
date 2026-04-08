@@ -2,67 +2,120 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Go</title>
 <style>
   :root {
-    --bg: #F5F5F0;
-    --surface: #E8E8E2;
-    --text: #2C2C2C;
-    --accent: #3A5F5A;
-    --board: #E0CFA8;
-    --black-stone: #1A1A1A;
+    --bg: #F7F7F6;
+    --surface: #EFEFEA;
+    --text: #1C1C1E;
+    --text-muted: #8E8E93;
+    --accent: #2C4A46;
+    --board: #DDC8A0;
+    --black-stone: #111111;
     --white-stone: #FDFDFD;
-    --border: #D1D1C7;
+    --border: #D1D1C6;
+    --radius: 8px;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
   }
   [data-theme="Ink"] {
-    --bg: #FAFAFA; --surface: #F0F0F0; --text: #111111; --accent: #000000; --board: #FFFFFF;
+    --bg: #FFFFFF; --surface: #F5F5F7; --text: #000000; --text-muted: #666666; --accent: #000000; --board: #FFFFFF; --border: #E5E5EA;
   }
   [data-theme="Monochrome"] {
-    --bg: #222222; --surface: #333333; --text: #EEEEEE; --accent: #888888; --board: #444444; 
-    --border: #555555;
+    /* Pure OLED black for premium mobile displays */
+    --bg: #000000; --surface: #1C1C1E; --text: #FFFFFF; --text-muted: #8E8E93; --accent: #FFFFFF; --board: #1C1C1E; --border: #38383A;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-  body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; min-height: 100vh; overflow-x: hidden; transition: background-color 0.3s; }
+  
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+  
+  body { 
+    background-color: var(--bg); 
+    color: var(--text); 
+    display: flex; 
+    justify-content: center; 
+    min-height: 100vh; 
+    overflow-x: hidden; 
+    transition: background-color 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); 
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", sans-serif; 
+    -webkit-font-smoothing: antialiased;
+  }
   
   /* Layouts */
-  .screen { display: none; width: 100%; max-width: 600px; padding: 2rem 1.5rem; flex-direction: column; }
-  .screen.active { display: flex; animation: fadeIn 0.3s ease-out; }
-  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .screen { 
+    display: none; 
+    width: 100%; 
+    max-width: 500px; /* Narrower for premium feel */
+    padding: calc(2rem + var(--safe-top)) 1.5rem calc(2rem + var(--safe-bottom)); 
+    flex-direction: column; 
+  }
+  .screen.active { display: flex; animation: fadeUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  @keyframes fadeUp { 
+    from { opacity: 0; transform: translateY(12px); } 
+    to { opacity: 1; transform: translateY(0); } 
+  }
   
   /* Typography & Elements */
-  h1 { font-size: 2.5rem; font-weight: 300; letter-spacing: -0.02em; margin-bottom: 0.2rem; text-align: center; }
-  p.subtitle { text-align: center; font-size: 0.9rem; color: var(--text); opacity: 0.7; margin-bottom: 2.5rem; }
+  h1 { font-size: 2.75rem; font-weight: 400; letter-spacing: -0.04em; margin-bottom: 0.2rem; text-align: center; }
+  p.subtitle { text-align: center; font-size: 0.95rem; font-weight: 400; color: var(--text-muted); margin-bottom: 3rem; letter-spacing: -0.01em; }
   
-  .panel { background: var(--surface); padding: 1.5rem; border: 1px solid var(--border); border-radius: 4px; margin-bottom: 1.5rem; }
-  .form-group { margin-bottom: 1.2rem; display: flex; flex-direction: column; }
-  .form-group:last-child { margin-bottom: 0; }
-  label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
-  select, button { width: 100%; padding: 0.8rem; border: 1px solid var(--border); background: var(--bg); color: var(--text); font-size: 1rem; border-radius: 0; appearance: none; outline: none; cursor: pointer; transition: all 0.2s; }
-  select:focus, button:focus { border-color: var(--accent); }
+  .panel { display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.5rem; }
   
-  .checkbox-group { display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 0.5rem; font-size: 0.9rem; }
-  .checkbox-group input { accent-color: var(--accent); width: 1.2rem; height: 1.2rem; }
+  label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
   
-  button.primary { background: var(--accent); color: #FFF; border: none; font-weight: 500; font-size: 1.1rem; padding: 1rem; margin-top: 1rem; }
-  button.primary:hover { opacity: 0.9; }
-  .secondary-actions { display: flex; justify-content: center; gap: 1rem; margin-top: 1rem; }
-  .secondary-actions button { background: none; border: none; width: auto; padding: 0.5rem; font-size: 0.85rem; opacity: 0.7; text-decoration: underline; }
+  select, button { 
+    width: 100%; 
+    padding: 1rem; 
+    background: var(--surface); 
+    color: var(--text); 
+    border: 1px solid transparent; 
+    font-size: 1rem; 
+    font-weight: 500;
+    border-radius: var(--radius); 
+    appearance: none; 
+    outline: none; 
+    cursor: pointer; 
+    transition: all 0.2s ease; 
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238E8E93' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+  select:active { filter: brightness(0.95); }
   
-  .footer-note { text-align: center; font-size: 0.75rem; opacity: 0.5; margin-top: auto; padding-top: 3rem; }
+  .checkbox-group { display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-size: 0.95rem; font-weight: 400; color: var(--text); padding: 0.5rem 0; }
+  .checkbox-group input { accent-color: var(--accent); width: 1.25rem; height: 1.25rem; border-radius: 4px; }
+  
+  button.primary { 
+    background: var(--text); 
+    color: var(--bg); 
+    font-weight: 500; 
+    font-size: 1.05rem; 
+    padding: 1.1rem; 
+    border-radius: var(--radius);
+    margin-top: 1rem;
+  }
+  button.primary:active { transform: scale(0.98); opacity: 0.9; }
+  
+  .secondary-actions { display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; }
+  .secondary-actions button { background: none; border: none; width: auto; padding: 0.5rem; font-size: 0.85rem; color: var(--text-muted); text-decoration: none; font-weight: 400; }
+  .secondary-actions button:active { color: var(--text); }
+  
+  .footer-note { text-align: center; font-size: 0.7rem; font-weight: 400; color: var(--text-muted); margin-top: auto; padding-top: 4rem; letter-spacing: 0.02em; }
   
   /* Game Screen */
-  .game-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 1.5rem; }
-  .status-block { display: flex; flex-direction: column; }
-  .turn-indicator { font-size: 1.2rem; font-weight: 500; }
-  .match-info { font-size: 0.8rem; opacity: 0.7; text-transform: uppercase; letter-spacing: 0.05em; }
-  .captures { font-size: 0.85rem; text-align: right; }
+  .game-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 2rem; padding: 0 0.5rem; }
+  .status-block { display: flex; flex-direction: column; gap: 0.2rem; }
+  .turn-indicator { font-size: 1.25rem; font-weight: 500; letter-spacing: -0.02em; }
+  .match-info { font-size: 0.75rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+  .captures { font-size: 0.85rem; font-weight: 500; text-align: right; color: var(--text-muted); line-height: 1.4; }
   
-  .board-container { width: 100%; aspect-ratio: 1; background: var(--board); border: 1px solid var(--border); position: relative; margin-bottom: 1.5rem; touch-action: manipulation; }
-  canvas { width: 100%; height: 100%; display: block; }
+  .board-container { width: 100%; aspect-ratio: 1; background: var(--board); border-radius: 2px; position: relative; margin-bottom: 2rem; touch-action: manipulation; }
+  canvas { width: 100%; height: 100%; display: block; border-radius: 2px; }
   
-  .action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
-  .action-bar button { font-size: 0.9rem; padding: 0.6rem; }
+  .action-bar { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+  .action-bar button { font-size: 0.95rem; font-weight: 500; padding: 0.8rem; background: var(--surface); color: var(--text); border-radius: var(--radius); }
+  .action-bar button:active { background: var(--border); transform: scale(0.98); }
   
   /* Utilities */
   .hidden { display: none !important; }
@@ -84,7 +137,7 @@
     </div>
     
     <div id="ai-config" class="hidden">
-      <div class="form-group">
+      <div class="form-group" style="margin-bottom: 1.5rem;">
         <label>AI Difficulty</label>
         <select id="ai-level">
           <option value="1">Beginner</option>
@@ -121,7 +174,7 @@
       </select>
     </div>
 
-    <div class="form-group" style="margin-top:1rem;">
+    <div class="form-group" style="margin-top: 0.5rem; gap: 0;">
       <label class="checkbox-group"><input type="checkbox" id="opt-coords"> Show coordinates</label>
       <label class="checkbox-group"><input type="checkbox" id="opt-marker" checked> Show last move marker</label>
       <label class="checkbox-group"><input type="checkbox" id="opt-restart"> Confirm restart</label>
@@ -130,7 +183,7 @@
   
   <button class="primary" onclick="startGame()">Start Game</button>
   <div class="secondary-actions">
-    <button onclick="alert('Standard Go Rules Apply. Capture stones by surrounding them. Prevent suicide moves.')">Rules</button>
+    <button onclick="alert('Standard Go Rules Apply.\n\n• Capture stones by removing their liberties.\n• Suicide moves are prohibited.')">Rules</button>
     <button onclick="resetSettings()">Reset Settings</button>
   </div>
   
@@ -141,7 +194,7 @@
   <div class="game-header">
     <div class="status-block">
       <div class="turn-indicator" id="turn-display">Black's Turn</div>
-      <div class="match-info" id="match-display">Two Players - 9x9</div>
+      <div class="match-info" id="match-display">Two Players · 9x9</div>
     </div>
     <div class="captures" id="capture-display">
       Black: 0 <br> White: 0
@@ -156,7 +209,7 @@
     <button onclick="passTurn()">Pass</button>
     <button onclick="resign()">Resign</button>
     <button onclick="handleRestart()">Restart</button>
-    <button onclick="backToSettings()">Back to Settings</button>
+    <button onclick="backToSettings()">End Match</button>
   </div>
 </div>
 
@@ -180,6 +233,15 @@ function toggleAIConfig() {
 
 function updateTheme() {
   document.body.setAttribute('data-theme', document.getElementById('theme-select').value);
+  // Update meta theme color for iOS status bar
+  const themeColors = { 'Classic': '#F7F7F6', 'Ink': '#FFFFFF', 'Monochrome': '#000000' };
+  let metaTheme = document.querySelector('meta[name="theme-color"]');
+  if(!metaTheme) {
+      metaTheme = document.createElement('meta');
+      metaTheme.name = "theme-color";
+      document.head.appendChild(metaTheme);
+  }
+  metaTheme.content = themeColors[document.getElementById('theme-select').value];
   if(state.board.length) drawBoard();
 }
 
@@ -210,7 +272,7 @@ function startGame() {
   resizeCanvas();
   
   let matchText = state.mode === 'local' ? 'Two Players' : `Vs AI (Lvl ${state.aiLevel})`;
-  document.getElementById('match-display').innerText = `${matchText} - ${state.size}x${state.size}`;
+  document.getElementById('match-display').innerText = `${matchText} · ${state.size}x${state.size}`;
   
   if(state.mode === 'ai' && state.playerSide === 2) setTimeout(aiMove, 100);
 }
@@ -234,33 +296,34 @@ function initMatch() {
 }
 
 function updateStatus() {
-  document.getElementById('turn-display').innerText = state.gameOver ? "Game Over" : (state.turn === 1 ? "Black's Turn" : "White's Turn");
-  document.getElementById('capture-display').innerHTML = `Black (Captures): ${state.captures[1]} <br> White (Captures): ${state.captures[2]}`;
+  document.getElementById('turn-display').innerText = state.gameOver ? "Match Ended" : (state.turn === 1 ? "Black's Turn" : "White's Turn");
+  document.getElementById('capture-display').innerHTML = `Black: ${state.captures[1]} <br> White: ${state.captures[2]}`;
 }
 
 function passTurn() {
   if(state.gameOver) return;
   state.passes++;
-  if(state.passes >= 2) { state.gameOver = true; updateStatus(); alert("Both players passed. Game Over."); return; }
+  if(state.passes >= 2) { state.gameOver = true; updateStatus(); alert("Both players passed. Match ended."); return; }
   state.turn = state.turn === 1 ? 2 : 1;
   updateStatus();
-  if(state.mode === 'ai' && state.turn !== state.playerSide) setTimeout(aiMove, 500);
+  if(state.mode === 'ai' && state.turn !== state.playerSide) setTimeout(aiMove, 400);
 }
 
 function resign() {
   if(state.gameOver) return;
   state.gameOver = true;
   let winner = state.turn === 1 ? "White" : "Black";
-  document.getElementById('turn-display').innerText = `${winner} Wins by Resignation`;
+  document.getElementById('turn-display').innerText = `${winner} Wins`;
 }
 
 // Rendering Logic
 function resizeCanvas() {
   const rect = canvas.parentElement.getBoundingClientRect();
-  canvas.width = rect.width * 2; // Retina resolution
+  canvas.width = rect.width * 2; 
   canvas.height = rect.height * 2;
   ctx.scale(2, 2);
-  margin = rect.width / (state.size + 1);
+  // Increase margin slightly for premium breathing room
+  margin = rect.width / (state.size + 1.5); 
   cellSize = (rect.width - margin * 2) / (state.size - 1);
   drawBoard();
 }
@@ -273,18 +336,23 @@ function drawBoard() {
   
   ctx.strokeStyle = styles.getPropertyValue('--border').trim();
   ctx.lineWidth = 1;
+  
+  // Crisp lines technique
+  ctx.translate(0.5, 0.5); 
+  
   ctx.beginPath();
   for(let i=0; i<state.size; i++) {
     ctx.moveTo(margin + i*cellSize, margin); ctx.lineTo(margin + i*cellSize, margin + (state.size-1)*cellSize);
     ctx.moveTo(margin, margin + i*cellSize); ctx.lineTo(margin + (state.size-1)*cellSize, margin + i*cellSize);
   }
   ctx.stroke();
+  ctx.translate(-0.5, -0.5);
   
   // Star points
   const stars = state.size === 19 ? [[3,3],[9,3],[15,3],[3,9],[9,9],[15,9],[3,15],[9,15],[15,15]] :
                 state.size === 13 ? [[3,3],[9,3],[6,6],[3,9],[9,9]] : [[2,2],[6,2],[4,4],[2,6],[6,6]];
   ctx.fillStyle = ctx.strokeStyle;
-  stars.forEach(([x,y]) => { ctx.beginPath(); ctx.arc(margin + x*cellSize, margin + y*cellSize, 3, 0, Math.PI*2); ctx.fill(); });
+  stars.forEach(([x,y]) => { ctx.beginPath(); ctx.arc(margin + x*cellSize, margin + y*cellSize, 2.5, 0, Math.PI*2); ctx.fill(); });
 
   // Stones
   for(let y=0; y<state.size; y++) {
@@ -293,13 +361,12 @@ function drawBoard() {
     }
   }
 
-  // Last move marker
+  // Last move marker (Refined)
   if(state.opts.marker && state.lastMove) {
-    ctx.strokeStyle = state.board[state.lastMove.y][state.lastMove.x] === 1 ? '#FFF' : '#000';
-    ctx.lineWidth = 2;
+    ctx.fillStyle = state.board[state.lastMove.y][state.lastMove.x] === 1 ? '#FFFFFF' : '#000000';
     ctx.beginPath();
-    ctx.arc(margin + state.lastMove.x*cellSize, margin + state.lastMove.y*cellSize, cellSize*0.2, 0, Math.PI*2);
-    ctx.stroke();
+    ctx.arc(margin + state.lastMove.x*cellSize, margin + state.lastMove.y*cellSize, cellSize*0.12, 0, Math.PI*2);
+    ctx.fill();
   }
 }
 
@@ -307,7 +374,7 @@ function drawStone(x, y, color) {
   const styles = getComputedStyle(document.body);
   ctx.fillStyle = color === 1 ? styles.getPropertyValue('--black-stone').trim() : styles.getPropertyValue('--white-stone').trim();
   ctx.beginPath();
-  ctx.arc(margin + x*cellSize, margin + y*cellSize, cellSize * 0.45, 0, Math.PI*2);
+  ctx.arc(margin + x*cellSize, margin + y*cellSize, cellSize * 0.46, 0, Math.PI*2);
   ctx.fill();
   if(color === 2) {
     ctx.strokeStyle = styles.getPropertyValue('--border').trim();
@@ -355,13 +422,11 @@ function getGroup(tx, ty, tBoard) {
 function attemptMove(x, y) {
   if(state.board[y][x] !== 0) return false;
   
-  // Clone board for safety check
   const tempBoard = state.board.map(row => [...row]);
   tempBoard[y][x] = state.turn;
   const oppColor = state.turn === 1 ? 2 : 1;
   let capturedStones = 0;
   
-  // Check captures
   [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dx, dy]) => {
     const nx = x+dx, ny = y+dy;
     if(nx>=0 && nx<state.size && ny>=0 && ny<state.size && tempBoard[ny][nx] === oppColor) {
@@ -372,10 +437,8 @@ function attemptMove(x, y) {
     }
   });
   
-  // Suicide check
   if(getGroup(x, y, tempBoard).liberties === 0) return false; 
   
-  // Commit move
   state.board = tempBoard;
   state.captures[state.turn] += capturedStones;
   state.lastMove = {x, y};
@@ -389,7 +452,7 @@ function attemptMove(x, y) {
   return true;
 }
 
-// Minimal Heuristic AI
+// AI
 function aiMove() {
   if(state.gameOver) return;
   const legalMoves = [];
@@ -411,34 +474,30 @@ function aiMove() {
   if(state.aiLevel > 1) {
     let bestScore = -Infinity;
     legalMoves.forEach(move => {
-      let score = Math.random(); // Base random tie-breaker
+      let score = Math.random(); 
       const tb = state.board.map(r => [...r]);
       tb[move.y][move.x] = state.turn;
       
-      // Casual: immediate captures
       if(state.aiLevel >= 2) {
          [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dx, dy]) => {
           const nx = move.x+dx, ny = move.y+dy;
           if(nx>=0 && nx<state.size && ny>=0 && ny<state.size && state.board[ny][nx] === oppColor) {
-            if(getGroup(nx, ny, state.board).liberties === 1) score += 100; // Capture!
+            if(getGroup(nx, ny, state.board).liberties === 1) score += 100;
           }
         });
       }
-      // Balanced: save own stones
       if(state.aiLevel >= 3) {
          [[0,1],[1,0],[0,-1],[-1,0]].forEach(([dx, dy]) => {
           const nx = move.x+dx, ny = move.y+dy;
           if(nx>=0 && nx<state.size && ny>=0 && ny<state.size && state.board[ny][nx] === state.turn) {
-            if(getGroup(nx, ny, state.board).liberties === 1 && getGroup(move.x, move.y, tb).liberties > 1) score += 50; // Save!
+            if(getGroup(nx, ny, state.board).liberties === 1 && getGroup(move.x, move.y, tb).liberties > 1) score += 50; 
           }
         });
       }
-      // Strong & Expert: structural heuristics
       if(state.aiLevel >= 4) {
         const libs = getGroup(move.x, move.y, tb).liberties;
         score += libs;
         if(state.aiLevel === 5) {
-          // Center bias in early game, proximity penalty to avoid clumping
           const distToCenter = Math.abs(move.x - state.size/2) + Math.abs(move.y - state.size/2);
           score -= distToCenter * 0.1;
         }
@@ -450,6 +509,9 @@ function aiMove() {
   
   attemptMove(bestMove.x, bestMove.y);
 }
+
+// Initial theme setup
+updateTheme();
 </script>
 </body>
 </html>
